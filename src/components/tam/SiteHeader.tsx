@@ -16,15 +16,13 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
-          {[
-            ["Hatch", "/"],
-            ["Arena", "/"],
-            ["Marketplace", "/"],
-            ["Leaderboards", "/"],
-          ].map(([label, href]) => (
+          <Link to="/hatch" className="font-mono-ui text-[12px] px-3 py-2 rounded-md hover:bg-muted transition-colors">
+            Hatch
+          </Link>
+          {["Arena", "Marketplace", "Leaderboards"].map((label) => (
             <a
               key={label}
-              href={href}
+              href="/"
               className="font-mono-ui text-[12px] px-3 py-2 rounded-md hover:bg-muted transition-colors"
             >
               {label}
