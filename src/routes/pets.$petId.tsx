@@ -106,7 +106,7 @@ function PetProfile() {
             <div className="rounded-2xl border-2 border-ink bg-card shadow-[var(--shadow-card)] p-5 space-y-4">
               <StatBar label="HP" value={pet.stats.hp} max={220} tone="primary" />
               <StatBar label="Strength" value={pet.stats.str} max={28} tone="warning" />
-              <StatBar label="Agility" value={pet.stats.agi} max={28} tone="accent" />
+              <StatBar label="Agility" value={pet.stats.agi} max={28} tone="arcade" />
               <StatBar label="Intellect" value={pet.stats.int} max={28} tone="success" />
             </div>
 
