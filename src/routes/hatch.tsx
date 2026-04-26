@@ -88,7 +88,7 @@ function HatchPage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <Incubator phase={phase} progress={progress} pet={pet} onStart={() => setPhase("incubating")} onView={() => pet && navigate({ to: "/pets/$petId", params: { petId: pet.id } })} />
+          <Incubator phase={phase} progress={progress} pet={pet} onStart={() => requireWallet({ action: "hatch", redirect: "/hatch", run: () => setPhase("incubating") })} onView={() => pet && navigate({ to: "/pets/$petId", params: { petId: pet.id } })} />
 
           <aside className="space-y-6">
             <RarityOdds />
