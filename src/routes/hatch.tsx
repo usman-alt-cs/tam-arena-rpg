@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/tam/SiteHeader";
 import { TactileButton } from "@/components/tam/TactileButton";
 import { Chip } from "@/components/tam/Chip";
 import { StatBar } from "@/components/tam/StatBar";
 import { RARITY_ODDS, mintPet, savePet, type Pet } from "@/lib/pets-store";
+import { useRequireWallet } from "@/hooks/use-wallet";
 import petEgg from "@/assets/pet-egg.png";
 
 export const Route = createFileRoute("/hatch")({
@@ -32,6 +33,7 @@ const INCUBATE_MS = 4200;
 
 function HatchPage() {
   const navigate = useNavigate();
+  const requireWallet = useRequireWallet();
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
   const [pet, setPet] = useState<Pet | null>(null);
