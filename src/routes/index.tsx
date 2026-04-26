@@ -398,9 +398,9 @@ function Marketplace() {
                 </div>
                 <Chip tone={p.tone}>◈ {p.price}</Chip>
               </div>
-              <TactileButton variant="ghost" size="sm" className="mt-4 w-full">
-                Inspect
-              </TactileButton>
+              <Link to="/marketplace" className="block mt-4">
+                <TactileButton variant="ghost" size="sm" className="w-full">Inspect</TactileButton>
+              </Link>
             </div>
           ))}
         </div>
