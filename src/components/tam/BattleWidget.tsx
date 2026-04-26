@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import petPurple from "@/assets/pet-purple.png";
 import petLegendary from "@/assets/pet-legendary.png";
 import { TactileButton } from "./TactileButton";
 import { Chip } from "./Chip";
 import { StatBar } from "./StatBar";
 import { cn } from "@/lib/utils";
-
-type Move = "rock" | "paper" | "scissors";
+import { recordRound, loadBattles, type BattleRecord, type Move } from "@/lib/battles-store";
+import { useRequireWallet, useWallet } from "@/hooks/use-wallet";
+import { firstOwnedPet, recordBattle } from "@/lib/care-store";
+import { shortAddr } from "@/lib/wallet-store";
 
 const MOVES: { id: Move; label: string; glyph: string }[] = [
   { id: "rock", label: "Rock", glyph: "✊" },
@@ -26,29 +28,53 @@ function resolve(p: Move, o: Move): "win" | "lose" | "draw" {
 }
 
 export function BattleWidget() {
+  const wallet = useWallet();
+  const requireWallet = useRequireWallet();
   const [playerHp, setPlayerHp] = useState(100);
   const [foeHp, setFoeHp] = useState(100);
-  const [lastMove, setLastMove] = useState<{ p: Move; o: Move; result: string } | null>(null);
   const [shakeFoe, setShakeFoe] = useState(false);
   const [shakePlayer, setShakePlayer] = useState(false);
   const [damage, setDamage] = useState<{ to: "p" | "o"; amt: number; id: number } | null>(null);
+  const [lastRecord, setLastRecord] = useState<BattleRecord | null>(null);
+  const [history, setHistory] = useState<BattleRecord[]>([]);
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    setHistory(loadBattles().slice(0, 4));
+  }, []);
 
   useEffect(() => {
     if (playerHp <= 0 || foeHp <= 0) {
       const t = setTimeout(() => {
         setPlayerHp(100);
         setFoeHp(100);
-        setLastMove(null);
       }, 1800);
       return () => clearTimeout(t);
     }
   }, [playerHp, foeHp]);
 
+  const playerPet = useMemo(() => (typeof window !== "undefined" ? firstOwnedPet() : null), [lastRecord, wallet]);
+  const playerName = playerPet?.name ?? "Cyber-Rex";
+  const playerSprite = playerPet?.sprite ?? petLegendary;
+  const playerLevel = playerPet ? Math.max(1, Math.floor((playerPet.stats.str + playerPet.stats.agi + playerPet.stats.int) / 3)) : 36;
+
   function play(move: Move) {
+    if (pending) return;
+    const proceed = requireWallet({
+      action: "battle",
+      redirect: "/",
+      run: () => doPlay(move),
+    });
+    if (!proceed) return;
+  }
+
+  function doPlay(move: Move) {
     const moves: Move[] = ["rock", "paper", "scissors"];
     const o = moves[Math.floor(Math.random() * 3)];
     const r = resolve(move, o);
     const dmg = 18 + Math.floor(Math.random() * 18);
+
+    setPending(true);
     if (r === "win") {
       setFoeHp((h) => Math.max(0, h - dmg));
       setShakeFoe(true);
@@ -60,7 +86,25 @@ export function BattleWidget() {
       setDamage({ to: "p", amt: dmg, id: Date.now() });
       setTimeout(() => setShakePlayer(false), 350);
     }
-    setLastMove({ p: move, o, result: r });
+
+    // Record on-chain (mock).
+    const opponentName = "Voidling";
+    const rec = recordRound({
+      petId: playerPet?.id,
+      opponentName,
+      playerMove: move,
+      opponentMove: o,
+      result: r,
+      damage: r === "draw" ? 0 : dmg,
+    });
+    setLastRecord(rec);
+    setHistory((h) => [rec, ...h].slice(0, 4));
+
+    if (playerPet) {
+      recordBattle(playerPet.id, opponentName, r, `${move} vs ${o}${r !== "draw" ? ` · -${dmg} HP` : ""}`);
+    }
+
+    setTimeout(() => setPending(false), 450);
   }
 
   return (
@@ -72,14 +116,17 @@ export function BattleWidget() {
             <span className="absolute inset-0 rounded-full bg-success animate-ping" />
             <span className="absolute inset-0 rounded-full bg-success" />
           </span>
-          <span className="font-mono-ui text-[11px]">Live arena · Match #4471</span>
+          <span className="font-mono-ui text-[11px]">
+            Live arena · Match #{(lastRecord?.matchId ?? 4471).toString()}
+          </span>
         </div>
-        <Chip tone="arcade">Polygon · 0.0001 USD/action</Chip>
+        <Chip tone="arcade">
+          {wallet ? `connected · ${shortAddr(wallet.address)}` : "Polygon · 0.0001 USD/action"}
+        </Chip>
       </div>
 
       {/* Battle scene */}
       <div className="relative mt-4 grid grid-cols-2 gap-3 rounded-xl border-2 border-ink bg-background p-4 grid-bg overflow-hidden">
-        {/* scanline */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 h-12 opacity-20 mix-blend-multiply"
@@ -88,12 +135,11 @@ export function BattleWidget() {
             animation: "scan 3.5s linear infinite",
           }}
         />
-
         <PetSlot
-          name="Cyber-Rex"
-          level={36}
+          name={playerName}
+          level={playerLevel}
           hp={playerHp}
-          src={petLegendary}
+          src={playerSprite}
           shake={shakePlayer}
           dmg={damage?.to === "p" ? damage : null}
           align="left"
@@ -110,26 +156,27 @@ export function BattleWidget() {
         />
       </div>
 
-      {/* Result line */}
-      <div className="mt-3 h-7 flex items-center justify-center font-mono-ui text-[11px]">
-        {!lastMove && <span className="text-muted-foreground">Pick a move to engage →</span>}
-        {lastMove && playerHp > 0 && foeHp > 0 && (
+      {/* Result line / on-chain receipt */}
+      <div className="mt-3 min-h-[28px] flex items-center justify-center font-mono-ui text-[11px] text-center">
+        {!lastRecord && <span className="text-muted-foreground">Pick a move to engage →</span>}
+        {lastRecord && playerHp > 0 && foeHp > 0 && (
           <span>
-            You played <b>{lastMove.p}</b> · Foe played <b>{lastMove.o}</b> ·{" "}
+            <b>{lastRecord.playerMove}</b> vs <b>{lastRecord.opponentMove}</b> ·{" "}
             <span
               className={cn(
-                lastMove.result === "win" && "text-success",
-                lastMove.result === "lose" && "text-destructive",
-                lastMove.result === "draw" && "text-muted-foreground",
+                lastRecord.result === "win" && "text-success",
+                lastRecord.result === "lose" && "text-destructive",
+                lastRecord.result === "draw" && "text-muted-foreground",
               )}
             >
-              {lastMove.result.toUpperCase()}
-            </span>
+              {lastRecord.result.toUpperCase()}
+            </span>{" "}
+            · block #{lastRecord.block.toLocaleString()}
           </span>
         )}
         {(playerHp <= 0 || foeHp <= 0) && (
           <span className="text-primary">
-            {foeHp <= 0 ? "VICTORY · +120 XP minted" : "K.O. · Resetting bracket…"}
+            {foeHp <= 0 ? "VICTORY · +35 XP minted" : "K.O. · Resetting bracket…"}
           </span>
         )}
       </div>
@@ -142,7 +189,7 @@ export function BattleWidget() {
             variant="ghost"
             size="md"
             onClick={() => play(m.id)}
-            disabled={playerHp <= 0 || foeHp <= 0}
+            disabled={playerHp <= 0 || foeHp <= 0 || pending}
             className="flex-col !h-auto py-3"
           >
             <span className="text-2xl leading-none">{m.glyph}</span>
@@ -150,19 +197,60 @@ export function BattleWidget() {
           </TactileButton>
         ))}
       </div>
+
+      {/* On-chain receipt */}
+      {lastRecord && (
+        <div className="mt-4 rounded-xl border-2 border-ink bg-ink text-background px-4 py-3 font-mono-ui text-[10px] space-y-1">
+          <div className="flex items-center justify-between opacity-70 uppercase">
+            <span>match receipt</span>
+            <span className="text-success">● confirmed</span>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1 mt-1">
+            <Cell k="tx" v={lastRecord.txHash.slice(0, 14) + "…"} />
+            <Cell k="block" v={`#${lastRecord.block.toLocaleString()}`} />
+            <Cell k="result" v={lastRecord.result.toUpperCase()} />
+            <Cell k="gas" v={`$${lastRecord.gasUsd.toFixed(5)}`} />
+          </div>
+        </div>
+      )}
+
+      {/* Recent history */}
+      {history.length > 0 && (
+        <div className="mt-3">
+          <div className="font-mono-ui text-[10px] uppercase text-muted-foreground mb-1.5">
+            recent rounds
+          </div>
+          <ul className="grid grid-cols-4 gap-1.5">
+            {history.slice(0, 4).map((h) => (
+              <li
+                key={h.id}
+                className={`rounded-md border-2 border-ink px-2 py-1.5 text-center font-mono-ui text-[10px] ${
+                  h.result === "win" ? "bg-success/15" : h.result === "lose" ? "bg-destructive/10" : "bg-muted"
+                }`}
+                title={`${h.playerMove} vs ${h.opponentMove}`}
+              >
+                <div className="uppercase">{h.result}</div>
+                <div className="opacity-60 tabular-nums">#{h.matchId}</div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Cell({ k, v }: { k: string; v: string }) {
+  return (
+    <div>
+      <div className="opacity-50 uppercase text-[9px]">{k}</div>
+      <div className="tabular-nums">{v}</div>
     </div>
   );
 }
 
 function PetSlot({
-  name,
-  level,
-  hp,
-  src,
-  shake,
-  dmg,
-  align,
-  flip,
+  name, level, hp, src, shake, dmg, align, flip,
 }: {
   name: string;
   level: number;
@@ -176,10 +264,8 @@ function PetSlot({
   return (
     <div className={cn("flex flex-col gap-2", align === "right" && "items-end text-right")}>
       <div className="flex w-full items-center justify-between gap-2">
-        <span className="font-display font-semibold text-sm">{name}</span>
-        <Chip tone="ink" className="!py-0.5">
-          Lv {level}
-        </Chip>
+        <span className="font-display font-semibold text-sm truncate">{name}</span>
+        <Chip tone="ink" className="!py-0.5">Lv {level}</Chip>
       </div>
       <StatBar label="HP" value={hp} tone={hp > 50 ? "success" : hp > 25 ? "warning" : "primary"} />
       <div className={cn("relative w-full h-32 sm:h-36 flex items-end justify-center")}>

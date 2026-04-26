@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/tam/SiteHeader";
 import { TactileButton } from "@/components/tam/TactileButton";
 import { Chip } from "@/components/tam/Chip";
@@ -68,10 +68,8 @@ function Hero() {
             on-chain.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <TactileButton size="lg">⚡ Hatch your first pet</TactileButton>
-            <TactileButton variant="ghost" size="lg">
-              Watch a battle ↗
-            </TactileButton>
+            <Link to="/hatch"><TactileButton size="lg">⚡ Hatch your first pet</TactileButton></Link>
+            <Link to="/marketplace"><TactileButton variant="ghost" size="lg">Browse marketplace ↗</TactileButton></Link>
           </div>
 
           <dl className="mt-10 grid grid-cols-3 gap-3 max-w-md">
@@ -370,9 +368,9 @@ function Marketplace() {
               Champions on the floor.
             </h2>
           </div>
-          <a className="font-mono-ui text-[12px] underline underline-offset-4 hover:text-primary" href="#">
+          <Link to="/marketplace" className="font-mono-ui text-[12px] underline underline-offset-4 hover:text-primary">
             Browse all listings →
-          </a>
+          </Link>
         </div>
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -400,9 +398,9 @@ function Marketplace() {
                 </div>
                 <Chip tone={p.tone}>◈ {p.price}</Chip>
               </div>
-              <TactileButton variant="ghost" size="sm" className="mt-4 w-full">
-                Inspect
-              </TactileButton>
+              <Link to="/marketplace" className="block mt-4">
+                <TactileButton variant="ghost" size="sm" className="w-full">Inspect</TactileButton>
+              </Link>
             </div>
           ))}
         </div>

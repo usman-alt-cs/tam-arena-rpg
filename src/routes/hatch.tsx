@@ -1,10 +1,11 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/tam/SiteHeader";
 import { TactileButton } from "@/components/tam/TactileButton";
 import { Chip } from "@/components/tam/Chip";
 import { StatBar } from "@/components/tam/StatBar";
 import { RARITY_ODDS, mintPet, savePet, type Pet } from "@/lib/pets-store";
+import { useRequireWallet } from "@/hooks/use-wallet";
 import petEgg from "@/assets/pet-egg.png";
 
 export const Route = createFileRoute("/hatch")({
@@ -32,6 +33,7 @@ const INCUBATE_MS = 4200;
 
 function HatchPage() {
   const navigate = useNavigate();
+  const requireWallet = useRequireWallet();
   const [phase, setPhase] = useState<Phase>("idle");
   const [progress, setProgress] = useState(0);
   const [pet, setPet] = useState<Pet | null>(null);
@@ -86,7 +88,7 @@ function HatchPage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <Incubator phase={phase} progress={progress} pet={pet} onStart={() => setPhase("incubating")} onView={() => pet && navigate({ to: "/pets/$petId", params: { petId: pet.id } })} />
+          <Incubator phase={phase} progress={progress} pet={pet} onStart={() => requireWallet({ action: "hatch", redirect: "/hatch", run: () => setPhase("incubating") })} onView={() => pet && navigate({ to: "/pets/$petId", params: { petId: pet.id } })} />
 
           <aside className="space-y-6">
             <RarityOdds />
