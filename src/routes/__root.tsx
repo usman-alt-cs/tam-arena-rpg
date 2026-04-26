@@ -29,14 +29,18 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Tam Arena" },
+      { name: "description", content: "Tam Arena is a blockchain virtual pet game combining Tamagotchi-style care with NFT battles." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Tam Arena" },
+      { property: "og:description", content: "Tam Arena is a blockchain virtual pet game combining Tamagotchi-style care with NFT battles." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Tam Arena" },
+      { name: "twitter:description", content: "Tam Arena is a blockchain virtual pet game combining Tamagotchi-style care with NFT battles." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db34c077-0685-4ac4-8b94-c445f6e2b778/id-preview-6fa1d107--2a69b20a-f919-4a26-915e-92934e3e282e.lovable.app-1777222618588.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db34c077-0685-4ac4-8b94-c445f6e2b778/id-preview-6fa1d107--2a69b20a-f919-4a26-915e-92934e3e282e.lovable.app-1777222618588.png" },
     ],
     links: [
       {
