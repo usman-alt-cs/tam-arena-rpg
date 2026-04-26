@@ -24,7 +24,8 @@ export function useRequireWallet() {
     const search: Record<string, string> = {};
     if (opts.redirect) search.redirect = opts.redirect;
     if (opts.action) search.action = opts.action;
-    navigate({ to: "/connect", search });
+    // Cast: route generated after this file is created in the same batch.
+    navigate({ to: "/connect", search } as never);
     return false;
   };
 }
