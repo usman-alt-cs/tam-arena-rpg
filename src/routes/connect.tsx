@@ -40,7 +40,7 @@ function ConnectPage() {
   const [picked, setPicked] = useState<string | null>(null);
   const [phase, setPhase] = useState<"idle" | "approving" | "approved">("idle");
 
-  const copy = (action && ACTION_COPY[action]) ?? { verb: "Connect your wallet", line: "Tam Arena uses your wallet to sign care, battle, and trade actions." };
+  const copy = (action ? ACTION_COPY[action] : undefined) ?? { verb: "Connect your wallet", line: "Tam Arena uses your wallet to sign care, battle, and trade actions." };
 
   function approve() {
     if (!picked) return;

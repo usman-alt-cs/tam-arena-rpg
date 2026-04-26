@@ -9,13 +9,25 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MarketplaceRouteImport } from './routes/marketplace'
 import { Route as HatchRouteImport } from './routes/hatch'
+import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PetsPetIdRouteImport } from './routes/pets.$petId'
 
+const MarketplaceRoute = MarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const HatchRoute = HatchRouteImport.update({
   id: '/hatch',
   path: '/hatch',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectRoute = ConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -31,41 +43,63 @@ const PetsPetIdRoute = PetsPetIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/hatch': typeof HatchRoute
+  '/marketplace': typeof MarketplaceRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/hatch': typeof HatchRoute
+  '/marketplace': typeof MarketplaceRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/hatch': typeof HatchRoute
+  '/marketplace': typeof MarketplaceRoute
   '/pets/$petId': typeof PetsPetIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/hatch' | '/pets/$petId'
+  fullPaths: '/' | '/connect' | '/hatch' | '/marketplace' | '/pets/$petId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/hatch' | '/pets/$petId'
-  id: '__root__' | '/' | '/hatch' | '/pets/$petId'
+  to: '/' | '/connect' | '/hatch' | '/marketplace' | '/pets/$petId'
+  id: '__root__' | '/' | '/connect' | '/hatch' | '/marketplace' | '/pets/$petId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConnectRoute: typeof ConnectRoute
   HatchRoute: typeof HatchRoute
+  MarketplaceRoute: typeof MarketplaceRoute
   PetsPetIdRoute: typeof PetsPetIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/marketplace': {
+      id: '/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof MarketplaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/hatch': {
       id: '/hatch'
       path: '/hatch'
       fullPath: '/hatch'
       preLoaderRoute: typeof HatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -87,7 +121,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConnectRoute: ConnectRoute,
   HatchRoute: HatchRoute,
+  MarketplaceRoute: MarketplaceRoute,
   PetsPetIdRoute: PetsPetIdRoute,
 }
 export const routeTree = rootRouteImport
