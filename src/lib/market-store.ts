@@ -35,6 +35,7 @@ function seed(): Listing[] {
     pet: {
       id: `npc_${i}_${Math.random().toString(36).slice(2, 6)}`,
       name: s.name,
+      speciesId: "flame-fox",
       species: s.species,
       sprite: s.sprite,
       rarity: s.rarity,
